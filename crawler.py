@@ -2,13 +2,14 @@
 
 import sys
 import urllib2
+from urlparse import urlparse
 
 #Global variables
 crawledurls = []       			 	 #List of urls already crawled 
 urls = []           				 #List of urls - all these urls be added to final repo and we will be crawling many of these urls
-reposize = 30         			 	 #Default size of url repo
+reposize = 50         			 	 #Default size of url repo
 noofurls = 0;         			 	 #Number of urls
-seedurl = " http://google.co.in/" 	 #Default seed url
+seedurl = " http://haricm.in/" 	     #Default seed url
 
 #Get page fom web and return it as a string
 def get_page(url)	:
@@ -33,6 +34,8 @@ def get_urls(crawlingurl, html):
 	#Formating crawlingurl 
 	if crawlingurl.endswith('/'):
 			crawlingurl = crawlingurl[:len(crawlingurl) -1]
+	parsedurl = urlparse(crawlingurl)
+	crawlingurl = parsedurl.scheme + "://" + parsedurl.netloc
 	#Scan till the end of html response. Stop scanning once we collect enough urls
 	while ((index < length) and (noofurls < reposize)):
 		nexthrefindex = html.find("href",index)
@@ -48,8 +51,11 @@ def get_urls(crawlingurl, html):
 		url = html[startingindex + 1:endingindex]
 		#Format url
 		url = url.strip()
-		if url.startswith('/') :
-			url = crawlingurl + url
+		if url.startswith('//'):
+			url = parsedurl.scheme + ":" + url
+		if url.startswith('/'):
+				url = crawlingurl  + url
+				
 		#Update noofurls and listofurls
 		if url not in crawledurls and url not in listofurls  and url not in urls:
 			noofurls = noofurls + 1
@@ -73,7 +79,7 @@ def crawl(seedurl):
 	while ((urls!=[]) and (noofurls < reposize)) :
 		url = urls.pop(0)          #Instead of pop(), pop(0) used so that it crawls like a BFS algorithm
 		crawledurls.append(url)
-		response = str(get_page(seedurl))
+		response = str(get_page(url))
 		if response != 'error' :
 			urls.extend(get_urls(url,response))
 			
